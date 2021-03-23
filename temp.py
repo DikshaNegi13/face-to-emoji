@@ -197,21 +197,19 @@ while(True):
             
            
 
-            # Now create a mask of logo and create its inverse mask also
             img2gray = cv2.cvtColor(img,cv2.COLOR_BGR2GRAY)
             ret, mask = cv2.threshold(img2gray, 10, 255, cv2.THRESH_BINARY)
             mask_inv = cv2.bitwise_not(mask)
 
             img1_bg = cv2.bitwise_and(roi,roi,mask = mask_inv)
 
-            # Take only region of logo from logo image.
             img2_fg = cv2.bitwise_and(img,img,mask = mask)
 
   
             dst = cv2.add(img1_bg,img2_fg)
             frame[y:y+h,x:x+w]= dst
             
-        cv2.imshow('video',frame)
+        cv2.imshow('face-to-emoji',frame)
    
     k = cv2.waitKey(30) & 0xff
     if k == 27: # press 'ESC' to quit
