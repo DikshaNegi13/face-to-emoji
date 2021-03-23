@@ -169,9 +169,11 @@ while(True):
 # Capture frame-by-frame
     ret, frame = cap.read()
     # cv2.resize(frame,(600,500))
-# Our operations on the frame come here
+    
     gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
-    faces = face_cascade.detectMultiScale(gray, 3.5, 3)
+    faces = face_cascade.detectMultiScale(gray, 3.5, 7)
+    
+    
     for (x,y,w,h) in faces:
         cv2.rectangle(frame,(x,y),(x+w,y+h),(255,0,0),2)
         roi_gray = gray[y:y+h, x:x+w]
@@ -183,18 +185,37 @@ while(True):
         prediction = model_emotion.predict(cropped_img)
         probabilityValue =np.amax(prediction)
         maxindex = int(np.argmax(prediction))
+       
+   
         if probabilityValue > threshold:
 	        cv2.putText(frame, emotion_dict[maxindex], (x+20, y-60), cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 255, 255), 2, cv2.LINE_AA)
 	        cv2.putText(frame, str(round(probabilityValue*100,2) )+"%", (180, 75), cv2.FONT_HERSHEY_SIMPLEX, 0.75, (0, 0, 255), 2, cv2.LINE_AA)
         if probabilityValue > threshold:
-            imgt = cv2.imread(str(emoji_dist[maxindex]))
-            frame[y:y+h, x:x+w]=cv2.resize(imgt,(h,w))
+            imgt=cv2.imread(str(emoji_dist[maxindex]))
+            roi=frame[y:y+h, x:x+w]
+            img=cv2.resize(imgt,(h,w))
+            
+           
+
+            # Now create a mask of logo and create its inverse mask also
+            img2gray = cv2.cvtColor(img,cv2.COLOR_BGR2GRAY)
+            ret, mask = cv2.threshold(img2gray, 10, 255, cv2.THRESH_BINARY)
+            mask_inv = cv2.bitwise_not(mask)
+
+            img1_bg = cv2.bitwise_and(roi,roi,mask = mask_inv)
+
+            # Take only region of logo from logo image.
+            img2_fg = cv2.bitwise_and(img,img,mask = mask)
+
+  
+            dst = cv2.add(img1_bg,img2_fg)
+            frame[y:y+h,x:x+w]= dst
+            
         cv2.imshow('video',frame)
    
     k = cv2.waitKey(30) & 0xff
     if k == 27: # press 'ESC' to quit
         break
-
 
 # When everything done, release the capture
 cap.release()
@@ -202,8 +223,6 @@ cv2.waitkey(0)
 cv2.destroyAllWindows()
 
     
-
-
 
 
 
